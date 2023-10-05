@@ -1,17 +1,17 @@
-import { Component } from "react";
+
 import css from './Searchbar.module.css'
 import SearchForm from "components/SearchForm/SearchForm";
 
-class SearchBar extends Component {
-    render() {
+const SearchBar= ({handleSearch}) => {
+    
         return (
           <>
             <header className={css.Searchbar}>
-              <SearchForm handleSearch={this.props.handleSearch} />
+              <SearchForm handleSearch={handleSearch} />
             </header>
           </>
         );
     }
-}
+
 
 export default SearchBar;

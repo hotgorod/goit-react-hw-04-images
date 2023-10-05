@@ -1,42 +1,24 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import css from './ImageGallery.module.css';
 import { getImages } from 'services/getImages';
 import Modal from 'components/Modal/Modal';
 import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import Button from 'components/Button/Button';
 
-class ImageGallery extends Component {
-  state = {
-    images: null,
-    isLoading: false,
-    error: false,
-    errorMessage: 'Something went wrong! Try again later',
-    showModal: false,
-    modalImageURL: '',
-    currentPage: 1,
-    totalImages: 0,
-  };
+const ImageGallery = ({onLoadMoreClick, searchText, currentPage }) => {
+  const [images, setImages] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(
+    'Something went wrong! Try again later'
+  );
+  const [showModal, setShowModal] = useState(false);
+  const [modalImageURL, setModalImageURL] = useState('');
+  // const [currentPage, setCurrentPage] = useState(1);
+  const [totalImages, setTotalImages] = useState(0);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.searchText !== this.props.searchText) {
-      this.setState({
-        isLoading: true,
-        error: false,
-        errorMessage: 'Something went wrong! Try again later',
-        
-        images: null,
-      });
-      
-    }
-    if (
-      prevProps.searchText !== this.props.searchText ||
-      prevProps.currentPage !== this.props.currentPage
-    ) {
-      this.loadMoreImages(this.props.searchText, this.props.currentPage);
-    }
-  }
-  loadMoreImages = (searchText, page) => {
-    getImages(searchText, page)
+  const loadMoreImages = (searchText, currentPage) => {
+    getImages(searchText, currentPage)
       .then(response => {
         if (response.status === 200) {
           return response.json();
@@ -46,74 +28,85 @@ class ImageGallery extends Component {
       })
       .then(data => {
         if (data.hits.length === 0) {
-          this.setState({ error: true, errorMessage: 'No results found' });
+          setError(true);
+          setErrorMessage('No results found');
         } else {
-          this.setState(prevState => ({
-            images: Array.isArray(prevState.images)
-              ? [...prevState.images, ...data.hits]
-              : data.hits,
-            totalImages: data.total,
-            // currentPage: prevState.currentPage + 1,
-          }));
+          Array.isArray(images)
+            ? setImages([...images, ...data.hits])
+            : setImages(data.hits);
+          setTotalImages(data.total);
         }
       })
-      .catch(() => this.setState({ error: true }))
-      .finally(() => this.setState({ isLoading: false }));
+      .catch(() => setError(true))
+      .finally(() => setIsLoading(false));
   };
 
-  openModal = imageURL => {
-    this.setState({ showModal: true, modalImageURL: imageURL });
-  };
 
-  closeModal = () => {
-    this.setState({ showModal: false, modalImageURL: '' });
-  };
+  useEffect(() => {
+    if (searchText === '') {
+      return;
+    }
 
-  onImageClick = imageURL => {
-    this.openModal(imageURL);
-  };
+    setIsLoading(true);
+    setError(false);
+    setErrorMessage('Something went wrong! Try again later');
+    setImages(null);
+    
+   
+  }, [searchText]);
+
+  useEffect(() => {
+     if (searchText === '') {
+       return;
+     }
+    loadMoreImages(searchText, currentPage);
+  }, [searchText, currentPage]);
 
   
+  const openModal = imageURL => {
+    setShowModal(true);
+    setModalImageURL(imageURL);
+  };
+  const closeModal = () => {
+    setShowModal(false);
+    setModalImageURL('');
+  };
+  const onImageClick = imageURL => {
+    openModal(imageURL);
+  };
 
-  render() {
-    const { images, isLoading, error } = this.state;
-    return (
-      <>
-        {error && (
-          <div>
-            <p>{this.state.errorMessage}</p>
-          </div>
-        )}
-        {isLoading && (
-          <div className={css.loader}>
-            <p>Loading...</p>
-          </div>
-        )}
-        <ul className={css.ImageGallery}>
-          {images &&
-            images.map(el => {
-              return (
-                <ImageGalleryItem
-                  key={el.id}
-                  src={el.webformatURL}
-                  alt={el.tags}
-                  onClick={() => this.onImageClick(el.largeImageURL)}
-                />
-              );
-            })}
-        </ul>
-        {this.state.showModal && (
-          <Modal
-            imageURL={this.state.modalImageURL}
-            onClose={this.closeModal}
-          />
-        )}
-        {this.state.totalImages > (this.state.images || []).length && (
-          <Button onClick={this.props.onLoadMoreClick} />
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      {error && (
+        <div>
+          <p>{errorMessage}</p>
+        </div>
+      )}
+      {isLoading && (
+        <div className={css.loader}>
+          <p>Loading...</p>
+        </div>
+      )}
+      <ul className={css.ImageGallery}>
+        {images &&
+          images.map(el => {
+            return (
+              <ImageGalleryItem
+                key={el.id}
+                src={el.webformatURL}
+                alt={el.tags}
+                onClick={() => onImageClick(el.largeImageURL)}
+              />
+            );
+          })}
+      </ul>
+      {showModal && <Modal imageURL={modalImageURL} onClose={closeModal} />}
+      {totalImages > (images || []).length && (
+        <Button onClick={onLoadMoreClick} />
+      )}
+    </>
+  );
+};
+
 
 export default ImageGallery;

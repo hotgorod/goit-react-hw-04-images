@@ -1,33 +1,31 @@
+import { useState } from "react";
 import ImageGallery from "./ImageGallery/ImageGallery";
 import SearchBar from "./Searchbar/Searchbar";
-import { Component } from "react";
 
-export class App extends Component {
-  state = {
-    searchText: '',
-    currentPage: 1,
-  };
 
-  handleSearch = searchText => {
-    this.setState({ searchText });
-    this.setState({ currentPage: 1 });
-  };
-  onLoadMoreClick = () => {
-    this.setState(prevState => ({ currentPage: prevState.currentPage + 1 }));
+export const App = () => {
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
-    
+  const handleSearch = searchText => {
+    setSearchText(searchText);
+    setCurrentPage(1);
   };
-  render() {
+  
+  const onLoadMoreClick = () => {
+    setCurrentPage(currentPage + 1);
+       
+  };
+  
     return (
       <div>
-        <SearchBar handleSearch={this.handleSearch} />
+        <SearchBar handleSearch={handleSearch} />
         <ImageGallery
-          currentPage={this.state.currentPage}
-          searchText={this.state.searchText}
-          onLoadMoreClick={this.onLoadMoreClick}
+          currentPage={currentPage}
+          searchText={searchText}
+          onLoadMoreClick={onLoadMoreClick}
         />
       </div>
     );
   }
-}
 
