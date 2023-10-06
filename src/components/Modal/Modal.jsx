@@ -5,14 +5,17 @@ import css from './Modal.module.css';
  const Modal = ({ onClose, imageURL }) => {
   
 
-  useEffect(() => {window.addEventListener('keydown', onEscapeKey)}, [])
+  // useEffect(() => {window.addEventListener('keydown', onEscapeKey)}, [])
   
-  useEffect(() => {
+   useEffect(() => {
+    window.addEventListener('keydown', onEscapeKey);
     return () => {window.removeEventListener('keydown', onEscapeKey)}
   }, [])
  
-  const onOverlayClick = () => {
-    onClose();
+   const onOverlayClick = (e) => {
+     if (e.currentTarget === e.target) {
+       onClose();
+     }
   };
 
   const onEscapeKey = event => {
